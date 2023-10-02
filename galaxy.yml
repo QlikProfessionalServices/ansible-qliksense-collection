@@ -10,8 +10,8 @@ license:
 tags:
   - qlik
   - sense
-repository: http://github.com/ahaydon/qliksense-ansible-collection
-documentation: http://github.com/ahaydon/qliksense-ansible-collection/wiki
-homepage: http://github.com/ahaydon/qliksense-ansible-collection
-issues: http://github.com/ahaydon/qliksense-ansible-collection/issues
+repository: https://github.com/QlikProfessionalServices/ansible-qliksense-collection
+documentation: https://github.com/QlikProfessionalServices/ansible-qliksense-collection/wiki
+homepage: https://github.com/QlikProfessionalServices/ansible-qliksense-collection
+issues: https://github.com/QlikProfessionalServices/ansible-qliksense-collection/issues
 build_ignore: []
