@@ -1,0 +1,205 @@
+---
+argument_specs:
+  main:
+    short_description: Run the Qlik Sense setup
+    options:
+      setup_path:
+        type: path
+        required: true
+        description: Path of the Qlik Sense setup file.
+
+      # Setup arguments
+
+      accept_eula:
+        type: bool
+        required: true
+        description: Accepts the Qlik User License Agreement.
+
+      desktop_shortcut:
+        type: bool
+        required: false
+        description: Installs desktop shortcuts. (defaults to true on clean installs).
+
+      skip_start_services:
+        type: bool
+        required: false
+        description: Skips starting services after the installation has finished.
+                     (defaults to 0 on clean installs, otherwise the current state.)
+
+      install_dir:
+        type: path
+        required: false
+        description: Defines the directory if the default install directory will not be used.
+                     (defaults to I(%ProgramFiles%\Qlik\Sense)).
+
+      user_with_domain:
+        type: str
+        required: true
+        description: Adds the username to run the Qlik Sense services.
+
+      user_password:
+        type: str
+        required: true
+        description: Adds the password to run the services.
+
+      db_password:
+        type: str
+        required: true
+        description: Adds the password for the database superuser that creates the user that runs
+                     the database.
+
+      hostname:
+        type: str
+        required: false
+        description: Define the address for the central node. The central node uses certificates to
+                     communicate securely with other servers. Leave blank to use the default.
+
+      cleanup:
+        type: bool
+        required: false
+        description: Deletes Qlik Sense certificates and any files in the I(ProgramData\Qlik\Sense)
+                     directory after the uninstall is completed.
+
+      shared_persistence_config:
+        type: path
+        default: '%TEMP%\spc.cfg'
+        description: Activates setup of shared persistence as storage method. All settings for
+                     shared persistence must be in the configuration file referenced here.
+
+      send_data:
+        type: bool
+        default: false
+        description: Shares system data with Qlik in anonymous form.
+
+      skip_validation:
+        type: bool
+        default: false
+        description: Skips password validation process for service user and shared folder access.
+                     For silent installation, database connection tests are also skipped.
+
+      database_dump_file:
+        type: path
+        required: false
+        description: Sets path database backup dump file.
+
+      bundle_install:
+        type: list
+        choices:
+          - dashboard
+          - visualization
+        description: Includes the dashboard and visualization bundles.
+
+      # Shared persistence settings
+
+      db_user_name:
+        type: str
+        default: qliksenserepository
+        description: User name of the repository database user.
+
+      db_user_password:
+        type: str
+        required: true
+        description: Password of the repository database user.
+
+      db_host:
+        type: str
+        default: localhost
+        description: Hostname of the machine running the repository database.
+
+      db_port:
+        type: int
+        default: 4432
+        description: Port used to communicate with the repository database.
+
+      root_dir:
+        type: path
+        required: false
+        description: Root directory for the file share to use as content storage. We recommend that
+                     you keep the content in this folder's sub-directories, but this can be changed
+                     in the StaticContentRootDir and ArchivedLogsDir settings.
+
+      apps_dir:
+        type: path
+        required: false
+        description: Directory to store apps in.
+
+      static_content_root_dir:
+        type: path
+        required: false
+        description: Root directory for all static content of the site.
+
+      archived_logs_dir:
+        type: path
+        required: false
+        description: Directory to save archived log files in.
+
+      create_cluster:
+        type: bool
+        default: true
+        description: Set to true if you want to create a new cluster, or false to join an existing
+                     cluster. join_cluster will be set automatically based on this value.
+
+      install_local_db:
+        type: bool
+        default: false
+        description: Set to true if you want to install a local PostgreSQL database on the node when
+                     you create a new cluster. This setting can only be used together with the
+                     create_cluster setting.
+
+      configure_db_listener:
+        type: bool
+        default: false
+        description: Set to true if you want to configure the PostgreSQL database installed by Qlik
+                     Sense to listen to database connections from other nodes.
+                     You need to configure the listen_addresses and ip_range settings.
+
+      listen_addresses:
+        type: list
+        default:
+          - 127.0.0.1
+          - ::1
+        description: Addresses that the database service should listen to.
+                     You can supply a comma separated list of IPv4 or IPv6 addresses, or 0.0.0.0
+                     (for all IPv4 addresses), ::/0 (for all IPv6 addresses) or * (for all
+                     addresses).
+
+      ip_range:
+        type: list
+        default:
+          - 127.0.0.1/32
+          - ::1/128
+        description: Subnet specification that covers the IP addresses of all nodes in your site.
+                     Either add one row for each node, using /32 as suffix for each address, or add
+                     a subnet that covers all addresses using, for example, /24 as suffix. To allow
+                     all servers to access the repository database, use 0.0.0.0/0. If entering
+                     multiple IP addresses or ranges, use a comma separated list. A range can be
+                     either IPv4 or IPv6.
+
+      max_connections:
+        type: int
+        default: 100
+        description: Specify the maximum number of concurrent connections to the database. The
+                     default value is 100. If you have a multi-node site multiple this value by the
+                     number of nodes in the cluster. For example,
+                     C(<MaxConnections>100</MaxConnections>) is a single server deployment.
+
+      http_port_number:
+        type: int
+        default: 80
+        description: "Listening port when using http. Default port: 80."
+
+      https_port_number:
+        type: int
+        default: 443
+        description: "Listening port when using https.Default port: 443."
+
+      enable_http_port:
+        type: bool
+        default: false
+        description: By default, the https port is used. Select EnableHttpPort to use the http port.
+
+      db_maximum_connection_pool_size:
+        type: int
+        default: 1000
+        description: "Maximum connection pool size for the repository database. Minimum value: 90,
+                     maximum value:1000."

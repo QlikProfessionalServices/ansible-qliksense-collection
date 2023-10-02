@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<SharedPersistenceConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <DbUserName>{{ db_user }}</DbUserName>
+  <DbUserPassword>{{ db_password | regex_replace('&', '&amp;') }}</DbUserPassword>
+  <DbHost>{{ db_host }}</DbHost>
+  <DbPort>{{ db_port }}</DbPort>
+  <RootDir>{{ root_dir }}</RootDir>
+  <StaticContentRootDir>{{ static_content_root_dir }}</StaticContentRootDir>
+  <ArchivedLogsDir>{{ archived_logs_dir }}</ArchivedLogsDir>
+  <AppsDir>{{ apps_dir }}</AppsDir>
+  <CreateCluster>{{ create_cluster | lower }}</CreateCluster>
+  <JoinCluster>{{ (not create_cluster) | lower }}</JoinCluster>
+  <InstallLocalDb>{{ install_local_db | lower }}</InstallLocalDb>
+  <ConfigureDbListener>{{ configure_db_listener | lower }}</ConfigureDbListener>
+  <ListenAddresses>{{ listen_addresses | join(',') }}</ListenAddresses>
+  <IpRange>{{ ip_range | join(',') }}</IpRange>
+  <MaxConnections>{{ db_max_conn }}</MaxConnections>
+  <HttpPortNumber>{{ http_port_number }}</HttpPortNumber>
+  <HttpsPortNumber>{{ https_port_number }}</HttpsPortNumber>
+  <EnableHttpPort>{{ enable_http_port | lower }}</EnableHttpPort>
+  <DbMaximumConnectionPoolSize>{{ db_maximum_connection_pool_size }}</DbMaximumConnectionPoolSize>
+</SharedPersistenceConfiguration>

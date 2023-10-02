@@ -1,0 +1,17 @@
+namespace: qlik
+name: sense
+version: 0.1.0
+readme: README.md
+authors:
+  - Adam Haydon (https://github.com/ahaydon)
+description: Collection of roles for managing Qlik Sense Enterprise deployments
+license:
+  - MIT
+tags:
+  - qlik
+  - sense
+repository: http://github.com/ahaydon/qliksense-ansible-collection
+documentation: http://github.com/ahaydon/qliksense-ansible-collection/wiki
+homepage: http://github.com/ahaydon/qliksense-ansible-collection
+issues: http://github.com/ahaydon/qliksense-ansible-collection/issues
+build_ignore: []

@@ -1,0 +1,78 @@
+---
+- name: Check EULA has been accepted
+  ansible.builtin.assert:
+    that: accept_eula is true
+    fail_msg: "You must accept the EULA (C(accept_eula: true)) to install Qlik Sense."
+    success_msg: EULA has been accepted.
+
+- name: Check DB password for invalid characters
+  ansible.builtin.assert:
+    that:
+      - db_password is defined
+      - "'\"' not in db_password"
+      - '"''" not in db_password'
+      - "';' not in db_password"
+      - "':' not in db_password"
+      - "'/' not in db_password"
+      - '"\\" not in db_password'
+      - "'.' not in db_password"
+      - "'>' not in db_password"
+      - "'<' not in db_password"
+      - "',' not in db_password"
+    fail_msg: "The password you entered contains a forbidden character \"';:/.>,"
+
+- name: Create shared persistence configuration file
+  ansible.windows.win_template:
+    src: spc.cfg.j2
+    dest: "{{ shared_persistance_config }}"
+
+- name: Install Qlik Sense Enterprise Server
+  ansible.windows.win_package:
+    creates_service: QlikSenseRepositoryService
+    path: "{{ setup_path }}"
+    arguments:
+      - -silent
+      - accepteula={{ accept_eula | int }}
+      - desktopshortcut={{ desktop_shortcut | default(1) | int }}
+      - skipstartservices={{ skip_start_services | default(0) | int }}
+      - installdir={{ install_dir | default('') }}
+      - userwithdomain={{ user_with_domain }}
+      - userpassword={{ user_password }}
+      - dbpassword={{ db_password }}
+      - hostname={{ ansible_facts.hostname }}
+      - sharedpersistenceconfig={{ shared_persistance_config }}
+      - senddata={{ send_data | default(0) | int }}
+      - skipvalidation={{ skip_validation | default(0) | int }}
+      - databasedumpfile={{ database_dump_file | default('') }}
+      - bundleinstall={{ bundle_install | join(',') }}
+
+- name: Start Repository database
+  ansible.windows.win_service:
+    name: QlikSenseRepositoryDatabase
+    state: started
+  when: install_local_db and not skip_start_services
+
+- name: Start Qlik Sense services
+  ansible.windows.win_service:
+    name: "{{ item }}"
+    state: started
+  loop:
+    - QlikSenseServiceDispatcher
+    - QlikSenseRepositoryService
+    - QlikSenseProxyService
+    - QlikSenseEngineService
+    - QlikSenseSchedulerService
+    - QlikSensePrintingService
+  when: not skip_start_services
+
+- name: Wait for Qlik Sense services to start
+  ansible.windows.win_uri:
+    url: "https://{{ ansible_facts.hostname }}/qps/user"
+    follow_redirects: none
+    method: GET
+    validate_certs: no
+  register: _result
+  until: _result.status_code == 200
+  retries: 30
+  delay: 10
+  when: not skip_start_services
