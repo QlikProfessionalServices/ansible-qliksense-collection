@@ -8,6 +8,11 @@ argument_specs:
         required: true
         description: Path of the Qlik Sense setup file.
 
+      update_path:
+        type: path
+        required: false
+        description: Path of the Qlik Sense update file.
+
       # Setup arguments
 
       accept_eula:

@@ -46,6 +46,22 @@
       - databasedumpfile={{ database_dump_file | default('') }}
       - bundleinstall={{ bundle_install | join(',') }}
 
+- name: Check if update is installed
+  ansible.windows.win_powershell:
+    script: |
+      $PkgName = (Get-Item '{{ update_path }}').VersionInfo.ProductName
+      $null -ne (Get-Package -Name $PkgName -ErrorAction Ignore)
+  register: update_installed
+  changed_when: not update_installed.output.0
+
+- name: Install Qlik Sense update
+  ansible.windows.win_package:
+    path: "{{ update_path }}"
+    arguments:
+      - install
+      - startservices={{ (not skip_start_services) | default(1) | int }}
+  when: update_path is defined and not update_installed.output.0
+
 - name: Start Repository database
   ansible.windows.win_service:
     name: QlikSenseRepositoryDatabase
