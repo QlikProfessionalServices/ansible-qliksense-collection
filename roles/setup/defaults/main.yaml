@@ -1,10 +1,16 @@
 ---
-db_user: qliksenserepository
+desktop_shortcut: true
+skip_start_services: false
+cleanup: false
+shared_persistance_config: '{{ ansible_env.TEMP }}\spc.cfg'
+send_data: false
+skip_validation: false
+db_user_name: qliksenserepository
 db_host: localhost
 db_port: 4432
+apps_dir: '{{ root_dir | default("") }}\Apps'
 static_content_root_dir: '{{ root_dir | default("") }}\StaticContent'
 archived_logs_dir: '{{ root_dir | default("") }}\ArchivedLogs'
-apps_dir: '{{ root_dir | default("") }}\Apps'
 create_cluster: true
 install_local_db: true
 configure_db_listener: false
@@ -14,10 +20,8 @@ listen_addresses:
 ip_range:
   - 127.0.0.1/32
   - ::1/128
-db_max_conn: 100
+max_connections: 100
 http_port_number: 80
 https_port_number: 443
 enable_http_port: false
 db_maximum_connection_pool_size: 90
-skip_start_services: false
-shared_persistance_config: '{{ ansible_env.TEMP }}\spc.cfg'

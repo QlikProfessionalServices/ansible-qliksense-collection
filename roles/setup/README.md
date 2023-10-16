@@ -36,7 +36,7 @@ db_port: 4432
 root_dir: '\\{{ ansible_netbios_name }}\QlikShare'
 apps_dir: '{{ root_dir }}\Apps'
 static_content_root_dir: '{{ root_dir }}\StaticContent'
-archived_logs_dir: '{{ root_dir }}\Archived Logs'
+archived_logs_dir: '{{ root_dir }}\ArchivedLogs'
 create_cluster: yes
 install_local_db: yes
 configure_db_listener: yes
