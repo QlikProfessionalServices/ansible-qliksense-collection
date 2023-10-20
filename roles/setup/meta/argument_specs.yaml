@@ -22,14 +22,13 @@ argument_specs:
 
       desktop_shortcut:
         type: bool
-        required: false
-        description: Installs desktop shortcuts. (defaults to true on clean installs).
+        default: true
+        description: Installs desktop shortcuts.
 
       skip_start_services:
         type: bool
-        required: false
+        default: false
         description: Skips starting services after the installation has finished.
-                     (defaults to 0 on clean installs, otherwise the current state.)
 
       install_dir:
         type: path
@@ -61,7 +60,7 @@ argument_specs:
 
       cleanup:
         type: bool
-        required: false
+        default: false
         description: Deletes Qlik Sense certificates and any files in the I(ProgramData\Qlik\Sense)
                      directory after the uninstall is completed.
 
@@ -89,6 +88,7 @@ argument_specs:
 
       bundle_install:
         type: list
+        required: false
         choices:
           - dashboard
           - visualization
@@ -126,17 +126,19 @@ argument_specs:
       apps_dir:
         type: path
         required: false
-        description: Directory to store apps in.
+        description: Directory to store apps in. Defaults to '{{ root_dir }}\Apps'.
 
       static_content_root_dir:
         type: path
         required: false
         description: Root directory for all static content of the site.
+                     Defaults to '{{ root_dir }}\StaticContent'.
 
       archived_logs_dir:
         type: path
         required: false
         description: Directory to save archived log files in.
+                     Defaults to '{{ root_dir }}\ArchivedLogs'.
 
       create_cluster:
         type: bool
@@ -146,7 +148,7 @@ argument_specs:
 
       install_local_db:
         type: bool
-        default: false
+        default: true
         description: Set to true if you want to install a local PostgreSQL database on the node when
                      you create a new cluster. This setting can only be used together with the
                      create_cluster setting.
@@ -196,7 +198,7 @@ argument_specs:
       https_port_number:
         type: int
         default: 443
-        description: "Listening port when using https.Default port: 443."
+        description: "Listening port when using https. Default port: 443."
 
       enable_http_port:
         type: bool
@@ -205,6 +207,6 @@ argument_specs:
 
       db_maximum_connection_pool_size:
         type: int
-        default: 1000
+        default: 90
         description: "Maximum connection pool size for the repository database. Minimum value: 90,
                      maximum value:1000."

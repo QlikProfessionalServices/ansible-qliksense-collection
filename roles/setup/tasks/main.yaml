@@ -33,26 +33,25 @@
     arguments:
       - -silent
       - accepteula={{ accept_eula | int }}
-      - desktopshortcut={{ desktop_shortcut | default(1) | int }}
-      - skipstartservices={{ skip_start_services | default(0) | int }}
-      - installdir={{ install_dir | default('') }}
+      - desktopshortcut={{ desktop_shortcut | int }}
+      - skipstartservices={{ update_path is defined | default(skip_start_services) | int }}
       - userwithdomain={{ user_with_domain }}
       - userpassword={{ user_password }}
       - dbpassword={{ db_password }}
-      - hostname={{ ansible_facts.hostname }}
-      - sharedpersistenceconfig={{ shared_persistance_config }}
+      - hostname={{ hostname | default('') }}
+      - sharedpersistenceconfig={{ shared_persistance_config | ansible.windows.quote }}
       - senddata={{ send_data | default(0) | int }}
       - skipvalidation={{ skip_validation | default(0) | int }}
-      - databasedumpfile={{ database_dump_file | default('') }}
-      - bundleinstall={{ bundle_install | join(',') }}
+      - bundleinstall={{ bundle_install | default([]) | join(',') }}
 
 - name: Check if update is installed
   ansible.windows.win_powershell:
     script: |
-      $PkgName = (Get-Item '{{ update_path }}').VersionInfo.ProductName
+      $PkgName = (Get-Item '{{ update_path | default('') }}').VersionInfo.ProductName
       $null -ne (Get-Package -Name $PkgName -ErrorAction Ignore)
   register: update_installed
   changed_when: not update_installed.output.0
+  when: update_path is defined
 
 - name: Install Qlik Sense update
   ansible.windows.win_package:
