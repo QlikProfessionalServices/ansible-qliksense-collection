@@ -1,62 +1,12 @@
 ---
-- name: Check EULA has been accepted
-  ansible.builtin.assert:
-    that: accept_eula is true
-    fail_msg: "You must accept the EULA (C(accept_eula: true)) to install Qlik Sense."
-    success_msg: EULA has been accepted.
-
-- name: Check DB password for invalid characters
-  ansible.builtin.assert:
-    that:
-      - db_password is defined
-      - "'\"' not in db_password"
-      - '"''" not in db_password'
-      - "';' not in db_password"
-      - "':' not in db_password"
-      - "'/' not in db_password"
-      - '"\\" not in db_password'
-      - "'.' not in db_password"
-      - "'>' not in db_password"
-      - "'<' not in db_password"
-      - "',' not in db_password"
-    fail_msg: "The password you entered contains a forbidden character \"';:/.>,"
+- name: Include check tasks
+  ansible.builtin.include_tasks:
+    file: checks.yaml
 
 - name: Create shared persistence configuration file
   ansible.windows.win_template:
     src: spc.cfg.j2
     dest: "{{ shared_persistance_config }}"
-
-- name: Get Qlik Sense installer version info
-  check_mode: no
-  ansible.windows.win_powershell:
-    script: |
-      $result = @{}
-      $result.Setup = (Get-Item '{{ setup_path }}').VersionInfo
-      if (${{ update_path is defined }}) {
-        $result.Update = (Get-Item '{{ update_path | default('') }}').VersionInfo
-      }
-      $Ansible.Result = $result
-  register: install_version
-  changed_when: false
-
-- name: Check installed release and patch
-  check_mode: no
-  ansible.windows.win_powershell:
-    script: |
-      $packages = Get-Package -Name 'Qlik Sense *' -ProviderName Programs
-      $result = @{}
-      $result.Release = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+$'
-      $result.Patch = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+ Patch \d+$'
-      $Ansible.Result = $result
-  register: installed_version
-  changed_when: false
-
-- name: Set install facts
-  ansible.builtin.set_fact:
-    setup_version: "{{ install_version.result.Setup.ProductVersion }}"
-    update_version: "{{ install_version.result.Update.ProductVersion | default('') }}"
-    installed_release: "{{ installed_version.result.Release.Version | default('') }}"
-    installed_patch: "{{ installed_version.result.Patch.Version | default('') }}"
 
 - name: Install Qlik Sense Enterprise Server
   ansible.windows.win_package:
@@ -90,55 +40,9 @@
     - installed_release != ''
     - installed_release != setup_version
 
-- name: Check for pending reboot
-  ansible.windows.win_reg_stat:
-    path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
-    name: PendingFileRenameOperations
-  when:
-    - update_path is defined
-    - installed_patch != update_version
-  register: pending_file_renames
-
-- name: Check for uninstalled Qlik Sense updates
-  check_mode: no
-  ansible.windows.win_powershell:
-    script: (Get-Item '{{ item[4:] }}').VersionInfo
-  loop: "{{ pending_file_renames.value | select('search', 'Qlik_Sense_update\\.exe$') }}"
-  changed_when: false
-  register: pkgcache_version
-  when: pending_file_renames.value is defined
-
-- name: Reboot without restarting services
-  when: pkgcache_version.results is defined
-        and pkgcache_version.results
-          | map(attribute='output')
-          | flatten
-          | selectattr('ProductVersion', 'equalto', update_version)
-          | length > 0
-  block:
-    - name: Get Qlik Sense service state
-      ansible.windows.win_service_info:
-        name: Qlik*
-      register: sense_service_info
-
-    - name: Set Qlik Sense services to manual start
-      ansible.windows.win_service:
-        name: "{{ item.name }}"
-        start_mode: manual
-      loop: "{{ sense_service_info.services | selectattr('start_mode', 'in', ['auto', 'delayed']) }}"
-      loop_control:
-        label: "{{ item.name }}"
-
-    - name: Reboot the machine
-      ansible.windows.win_reboot:
-
-    - name: Restore Qlik Sense services start mode
-      ansible.windows.win_service:
-        name: "{{ item.name }}"
-        start_mode: "{{ item.start_mode }}"
-      loop: "{{ sense_service_info.services | selectattr('start_mode', 'in', ['auto', 'delayed']) }}"
-      loop_control:
-        label: "{{ item.name }} [{{ item.start_mode }}]"
+- name: Include reboot tasks
+  ansible.builtin.include_tasks:
+    file: reboot.yaml
 
 - name: Install Qlik Sense update
   ansible.windows.win_package:
@@ -150,33 +54,6 @@
     - update_path is defined
     - installed_patch != update_version
 
-- name: Start Repository database
-  ansible.windows.win_service:
-    name: QlikSenseRepositoryDatabase
-    state: started
-  when: install_local_db and not skip_start_services
-
-- name: Start Qlik Sense services
-  ansible.windows.win_service:
-    name: "{{ item }}"
-    state: started
-  loop:
-    - QlikSenseServiceDispatcher
-    - QlikSenseRepositoryService
-    - QlikSenseProxyService
-    - QlikSenseEngineService
-    - QlikSenseSchedulerService
-    - QlikSensePrintingService
-  when: not skip_start_services
-
-- name: Wait for Qlik Sense services to start
-  ansible.windows.win_uri:
-    url: "https://{{ ansible_facts.hostname }}/qps/user"
-    follow_redirects: none
-    method: GET
-    validate_certs: no
-  register: _result
-  until: _result.status_code == 200
-  retries: 30
-  delay: 10
-  when: not skip_start_services
+- name: Include service tasks
+  ansible.builtin.include_tasks:
+    file: start_services.yaml

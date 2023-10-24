@@ -210,3 +210,67 @@ argument_specs:
         default: 90
         description: "Maximum connection pool size for the repository database. Minimum value: 90,
                      maximum value:1000."
+
+
+  upgrade:
+    short_description: Run the Qlik Sense setup
+    options:
+      setup_path:
+        type: path
+        required: true
+        description: Path of the Qlik Sense setup file.
+
+      update_path:
+        type: path
+        required: false
+        description: Path of the Qlik Sense update file.
+
+      # Setup arguments
+
+      accept_eula:
+        type: bool
+        required: true
+        description: Accepts the Qlik User License Agreement.
+
+      desktop_shortcut:
+        type: bool
+        default: true
+        description: Installs desktop shortcuts.
+
+      skip_start_services:
+        type: bool
+        default: false
+        description: Skips starting services after the installation has finished.
+
+      install_dir:
+        type: path
+        required: false
+        description: Defines the directory if the default install directory will not be used.
+                     (defaults to I(%ProgramFiles%\Qlik\Sense)).
+
+      user_password:
+        type: str
+        required: true
+        description: Adds the password to run the services.
+
+      db_password:
+        type: str
+        required: true
+        description: Adds the password for the database superuser that creates the user that runs
+                     the database.
+
+
+  patch:
+    short_description: Run the Qlik Sense setup
+    options:
+      update_path:
+        type: path
+        required: true
+        description: Path of the Qlik Sense update file.
+
+      # Setup arguments
+
+      skip_start_services:
+        type: bool
+        default: false
+        description: Skips starting services after the installation has finished.

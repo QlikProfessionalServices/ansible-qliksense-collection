@@ -1,0 +1,78 @@
+---
+- name: Get Qlik Sense installer version info
+  check_mode: no
+  ansible.windows.win_powershell:
+    script: |
+      $result = @{}
+      if (${{ setup_path is defined }}) {
+        $result.Setup = (Get-Item '{{ setup_path | default('') }}').VersionInfo
+      }
+      if (${{ update_path is defined }}) {
+        $result.Update = (Get-Item '{{ update_path | default('') }}').VersionInfo
+      }
+      $Ansible.Result = $result
+  register: install_version
+  changed_when: false
+
+- name: Check installed release and patch
+  check_mode: no
+  ansible.windows.win_powershell:
+    script: |
+      $packages = Get-Package -Name 'Qlik Sense *' -ProviderName Programs
+      $result = @{}
+      $result.Release = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+$'
+      $result.Patch = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+ Patch \d+$'
+      $Ansible.Result = $result
+  register: installed_version
+  changed_when: false
+
+- name: Set install facts
+  ansible.builtin.set_fact:
+    setup_version: "{{ install_version.result.Setup.ProductVersion | default('0.0.0') }}"
+    update_version: "{{ install_version.result.Update.ProductVersion
+      | default(install_version.result.Setup.ProductVersion) }}"
+    installed_release: "{{ installed_version.result.Release.Version | default('0.0.0') }}"
+    installed_patch: "{{ installed_version.result.Patch.Version | default('0.0.0') }}"
+
+- name: Check EULA has been accepted
+  ansible.builtin.assert:
+    that: accept_eula is true
+    fail_msg: "You must accept the EULA (C(accept_eula: true)) to install Qlik Sense."
+    success_msg: EULA has been accepted.
+  when: accept_eula is defined
+
+- name: Check DB password for invalid characters
+  ansible.builtin.assert:
+    that:
+      - db_password is defined
+      - "'\"' not in db_password"
+      - '"''" not in db_password'
+      - "';' not in db_password"
+      - "':' not in db_password"
+      - "'/' not in db_password"
+      - '"\\" not in db_password'
+      - "'.' not in db_password"
+      - "'>' not in db_password"
+      - "'<' not in db_password"
+      - "',' not in db_password"
+    fail_msg: "The password you entered contains a forbidden character \"';:/.>,"
+  when: db_password is defined
+
+- name: Check Sense version can be installed
+  ansible.builtin.assert:
+    that:
+      - setup_version is version(installed_release, 'ge', strict=true)
+    fail_msg: Setup version must be newer than installed version.
+  when: setup_path is defined
+
+- name: Check update is compatible with installed release
+  vars:
+    installed_major: "{{ [setup_version, installed_release] | community.general.version_sort | last
+      | split('.') | slice(2) | first | join('.') }}"
+    update_major: "{{ update_version | split('.') | slice(2) | first | join('.') }}"
+  ansible.builtin.assert:
+    that:
+      - update_version is version(installed_patch, 'ge', strict=true)
+      - update_major is version(installed_major, 'eq', strict=true)
+    fail_msg: Patch version not compatible with installed release.
+  when: update_path is defined

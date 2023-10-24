@@ -1,0 +1,34 @@
+---
+- name: Include check tasks
+  ansible.builtin.include_tasks:
+    file: checks.yaml
+
+- name: Upgrade Qlik Sense Enterprise Server
+  ansible.windows.win_package:
+    path: "{{ setup_path }}"
+    arguments:
+      - -silent
+      - accepteula={{ accept_eula | int }}
+      - desktopshortcut={{ desktop_shortcut | int }}
+      - skipstartservices={{ update_path is defined | default(skip_start_services) | int }}
+      - userpassword={{ user_password }}
+      - dbpassword={{ db_password }}
+  when: setup_version is version(installed_release, 'gt')
+
+- name: Include reboot tasks
+  ansible.builtin.include_tasks:
+    file: reboot.yaml
+
+- name: Install Qlik Sense update
+  ansible.windows.win_package:
+    path: "{{ update_path }}"
+    arguments:
+      - install
+      - startservices={{ (not skip_start_services) | default(1) | int }}
+  when:
+    - update_path is defined
+    - update_version is version(installed_patch, 'gt')
+
+- name: Include service tasks
+  ansible.builtin.include_tasks:
+    file: start_services.yaml
