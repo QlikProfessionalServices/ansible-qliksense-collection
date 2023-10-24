@@ -26,6 +26,38 @@
     src: spc.cfg.j2
     dest: "{{ shared_persistance_config }}"
 
+- name: Get Qlik Sense installer version info
+  check_mode: no
+  ansible.windows.win_powershell:
+    script: |
+      $result = @{}
+      $result.Setup = (Get-Item '{{ setup_path }}').VersionInfo
+      if (${{ update_path is defined }}) {
+        $result.Update = (Get-Item '{{ update_path | default('') }}').VersionInfo
+      }
+      $Ansible.Result = $result
+  register: install_version
+  changed_when: false
+
+- name: Check installed release and patch
+  check_mode: no
+  ansible.windows.win_powershell:
+    script: |
+      $packages = Get-Package -Name 'Qlik Sense *' -ProviderName Programs
+      $result = @{}
+      $result.Release = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+$'
+      $result.Patch = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+ Patch \d+$'
+      $Ansible.Result = $result
+  register: installed_version
+  changed_when: false
+
+- name: Set install facts
+  ansible.builtin.set_fact:
+    setup_version: "{{ install_version.result.Setup.ProductVersion }}"
+    update_version: "{{ install_version.result.Update.ProductVersion | default('') }}"
+    installed_release: "{{ installed_version.result.Release.Version | default('') }}"
+    installed_patch: "{{ installed_version.result.Patch.Version | default('') }}"
+
 - name: Install Qlik Sense Enterprise Server
   ansible.windows.win_package:
     creates_service: QlikSenseRepositoryService
@@ -44,29 +76,27 @@
       - skipvalidation={{ skip_validation | default(0) | int }}
       - bundleinstall={{ bundle_install | default([]) | join(',') }}
 
-- name: Get update version info
-  check_mode: no
-  ansible.windows.win_powershell:
-    script: $Ansible.Result = (Get-Item '{{ update_path | default('') }}').VersionInfo
-  register: update_version
-  changed_when: false
-  when: update_path is defined
-
-- name: Check if update is installed
-  check_mode: no
-  ansible.windows.win_powershell:
-    script: |
-      $Ansible.Result = (Get-Package -Name '{{ update_version.result.ProductName }}' -ErrorAction Ignore)
-      $null -ne $Ansible.Result
-  register: update_installed
-  changed_when: not update_installed.output.0
-  when: update_path is defined
+- name: Upgrade Qlik Sense Enterprise Server
+  ansible.windows.win_package:
+    path: "{{ setup_path }}"
+    arguments:
+      - -silent
+      - accepteula={{ accept_eula | int }}
+      - desktopshortcut={{ desktop_shortcut | int }}
+      - skipstartservices={{ update_path is defined | default(skip_start_services) | int }}
+      - userpassword={{ user_password }}
+      - dbpassword={{ db_password }}
+  when:
+    - installed_release != ''
+    - installed_release != setup_version
 
 - name: Check for pending reboot
   ansible.windows.win_reg_stat:
     path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager
     name: PendingFileRenameOperations
-  when: update_installed.output is defined and not update_installed.output.0
+  when:
+    - update_path is defined
+    - installed_patch != update_version
   register: pending_file_renames
 
 - name: Check for uninstalled Qlik Sense updates
@@ -83,7 +113,7 @@
         and pkgcache_version.results
           | map(attribute='output')
           | flatten
-          | selectattr('ProductVersion', 'equalto', update_version.result.ProductVersion)
+          | selectattr('ProductVersion', 'equalto', update_version)
           | length > 0
   block:
     - name: Get Qlik Sense service state
@@ -116,7 +146,9 @@
     arguments:
       - install
       - startservices={{ (not skip_start_services) | default(1) | int }}
-  when: update_path is defined and not update_installed.output.0
+  when:
+    - update_path is defined
+    - installed_patch != update_version
 
 - name: Start Repository database
   ansible.windows.win_service:
