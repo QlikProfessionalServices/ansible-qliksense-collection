@@ -37,8 +37,8 @@
       - userpassword={{ user_password }}
       - dbpassword={{ db_password }}
   when:
-    - installed_release != ''
-    - installed_release != setup_version
+    - installed_release != '0.0.0'
+    - setup_version is version(installed_release, 'gt')
 
 - name: Include reboot tasks
   ansible.builtin.include_tasks:
