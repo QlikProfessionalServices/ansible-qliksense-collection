@@ -18,7 +18,7 @@
   check_mode: no
   ansible.windows.win_powershell:
     script: |
-      $packages = Get-Package -Name 'Qlik Sense *' -ProviderName Programs
+      $packages = Get-Package -Name 'Qlik Sense *' -ProviderName Programs -ErrorAction Ignore
       $result = @{}
       $result.Release = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+$'
       $result.Patch = $packages | Where-Object Name -Match 'Qlik Sense [^ ]+ [^ ]+ Patch \d+$'
