@@ -1,0 +1,113 @@
+---
+- name: Lookup Qlik Sense release # noqa: run-once[task]
+  delegate_to: localhost
+  run_once: yes
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/qlik-download/qlik-sense-server/releases?page=1
+    headers:
+      Authorization: "{% if github_token is defined %} Bearer {{ github_token | default('') }} {% endif %}"
+  register: sense_releases
+
+- name: Page through releases # noqa: run-once[task]
+  delegate_to: localhost
+  run_once: yes
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/qlik-download/qlik-sense-server/releases?page={{ item }}
+    headers:
+      Authorization: "{% if github_token is defined %} Bearer {{ github_token | default('') }} {% endif %}"
+  register: sense_releases_pages
+  vars:
+    latest_result: "{{ sense_releases_pages | default(sense_releases) }}"
+    page_count: "{{ latest_result.link | regex_search('page=(\\d+)>; rel=\"last\"', '\\1') | first | int }}"
+  loop: "{{ range(2, page_count | int) }}"
+  when: latest_result.json
+    | selectattr('prerelease', 'equalto', false)
+    | selectattr('name', 'equalto', release_name)
+    | length == 0
+  delay: 1
+
+- name: Set release facts
+  vars:
+    results: "{{ [sense_releases] + sense_releases_pages.results }}"
+    release: "{{ results | map(attribute='json', default=[]) | flatten
+      | selectattr('prerelease', 'equalto', false)
+      | selectattr('name', 'equalto', release_name)
+      | first }}"
+    patch: "{{ results
+      | default([])
+      | map(attribute='json', default=[])
+      | flatten
+      | selectattr('prerelease', 'equalto', false)
+      | selectattr('name', 'equalto', patch_name | default(''))
+      | map(attribute='assets')
+      | flatten }}"
+  ansible.builtin.set_fact:
+    release_name: "Qlik Sense {{ release.name | split(' ') | slice(2) | first | join(' ') }}"
+    patch_name: "{% if patch_name is defined %}Qlik Sense {{ patch_name }}{% endif %}"
+    download_url: "{{ release.assets
+      | selectattr('name', 'equalto', 'Qlik_Sense_setup.exe')
+      | map(attribute='browser_download_url')
+      | flatten
+      | first }}"
+    checksum_url: "{{ release.assets
+      | selectattr('name', 'equalto', 'Qlik_Sense_setup.exe.md5')
+      | map(attribute='browser_download_url')
+      | flatten
+      | first }}"
+    patch_download_url: "{{ patch
+      | selectattr('name', 'equalto', 'Qlik_Sense_update.exe')
+      | map(attribute='browser_download_url')
+      | flatten
+      | first
+      | default('') }}"
+    patch_checksum_url: "{{ patch
+      | selectattr('name', 'equalto', 'Qlik_Sense_update.exe.md5')
+      | map(attribute='browser_download_url')
+      | flatten
+      | first
+      | default('') }}"
+
+- name: Create setup directories # noqa: run-once[task]
+  delegate_to: localhost
+  run_once: yes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+  loop:
+    - "{{ setup_path | dirname }}"
+    - "{{ patch_path | dirname | default('') }}"
+
+- name: Download Qlik Sense setup files # noqa: run-once[task]
+  delegate_to: localhost
+  run_once: yes
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    checksum: "{{ item.checksum }}"
+    mode: "0644"
+  loop:
+    - url: "{{ download_url }}"
+      dest: "{{ setup_path }}"
+      checksum: "md5:{{ lookup('ansible.builtin.url', checksum_url) if checksum_url | length > 0 }}"
+    - url: "{{ patch_download_url }}"
+      dest: "{{ patch_path }}"
+      checksum: "md5:{{ lookup('ansible.builtin.url', patch_checksum_url) if patch_checksum_url | length > 0 }}"
+  when: item.url | length > 0
+  register: downloads
+
+- name: Copy setup file to host
+  ansible.windows.win_copy:
+    dest: '{{ ansible_user_dir }}\Downloads\{{ item | basename }}'
+    src: "{{ item }}"
+  loop: "{{ downloads.results | selectattr('dest', 'defined') | map(attribute='dest') | flatten }}"
+
+- name: Set setup path
+  ansible.builtin.set_fact:
+    setup_path: '{{ ansible_user_dir }}\Downloads\{{ setup_path | basename }}'
+  when: setup_path is defined
+
+- name: Set patch path
+  ansible.builtin.set_fact:
+    patch_path: '{{ ansible_user_dir }}\Downloads\{{ patch_path | basename }}'
+  when: patch_path is defined
