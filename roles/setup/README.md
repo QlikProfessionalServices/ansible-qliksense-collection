@@ -61,18 +61,18 @@ None.
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-        - qlik.sense.setup
-          setup_path: '{{ ansible_env.HOME }}\Downloads\Qlik_Sense_setup.exe'
-          accept_eula: yes
-          user_with_domain: '{{ ansible_netbios_name }}\qservice'
-          user_password: "Qlik1234"
-          db_user_password: "Qlik1234"
-          db_password: "Qlik1234"
-          root_dir: '\\{{ ansible_netbios_name }}\QlikShare'
+```yaml
+- hosts: servers
+  roles:
+    - role: qlik.sense.setup
+      setup_path: '{{ ansible_env.HOME }}\Downloads\Qlik_Sense_setup.exe'
+      accept_eula: yes
+      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      user_password: "Qlik1234"
+      db_user_password: "Qlik1234"
+      db_password: "Qlik1234"
+      root_dir: '\\{{ ansible_netbios_name }}\QlikShare'
+```
 
 License
 -------
