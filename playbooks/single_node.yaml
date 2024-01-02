@@ -1,0 +1,45 @@
+- name: Install Qlik Sense
+  hosts: sense_nodes
+
+  pre_tasks:
+    - name: Create Qlik Sense service account
+      ansible.windows.win_user:
+        name: qservice
+        password: "{{ qlik_service_password }}"
+        password_never_expires: yes
+        user_cannot_change_password: yes
+        groups:
+          - Administrators
+        groups_action: add
+
+    - name: Create cluster root directory
+      ansible.windows.win_file:
+        path: C:\QlikShare
+        state: directory
+
+    - name: Create cluster share
+      ansible.windows.win_share:
+        name: QlikShare
+        description: Qlik Sense cluster share
+        path: C:\QlikShare
+        list: no
+        full: Administrators,qservice
+
+  roles:
+    - role: qlik.sense.download
+    - role: qlik.sense.setup
+      root_dir: \\{{ ansible_netbios_name }}\QlikShare
+      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      user_password: "{{ qlik_service_password }}"
+
+  tasks:
+    - name: Firewall rule to allow HTTPS access to Qlik Sense
+      community.windows.win_firewall_rule:
+        name: Qlik Sense Proxy (HTTPS-In)
+        group: Qlik Sense
+        localport: 443
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
