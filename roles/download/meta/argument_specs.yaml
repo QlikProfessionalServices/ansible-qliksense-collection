@@ -1,0 +1,42 @@
+---
+argument_specs:
+  main:
+    short_description: Main entrypoint for Qlik Sense download role
+    options:
+      release_name:
+        type: str
+        required: false
+        description:
+          - Name of the Qlik Sense release to download. This value must match the name of a release
+            published at https://github.com/qlik-download/qlik-sense-server/releases.
+
+      patch_name:
+        type: str
+        required: false
+        description:
+          - Name of a Sense Sense patch/update to download. This value must match the name of a
+            release published at https://github.com/qlik-download/qlik-sense-server/releases.
+
+      download_path:
+        type: path
+        default: "{{ lookup('ansible.builtin.env', 'HOME') }}/Downloads"
+        description:
+          - Path to download the Qlik Sense package to.
+
+      setup_path:
+        type: path
+        default: "{{ download_path }}/{{ release_name }}/Qlik_Sense_setup.exe"
+        description:
+          - Path of the Qlik Sense setup file.
+
+      update_path:
+        type: path
+        default: "{{ download_path }}/{{ patch_name }}/Qlik_Sense_update.exe"
+        description:
+          - Path of the Qlik Sense update file.
+
+      github_token:
+        type: str
+        required: false
+        description:
+          - Authentication token to allow for increased rate limit on GitHub APIs.
