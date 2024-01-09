@@ -1,0 +1,29 @@
+---
+argument_specs:
+  main:
+    short_description: Main entrypoint for Qlik Sense site settings role
+    options:
+      site_license_key:
+        type: str
+        required: true
+        description:
+          - License key to use for the site.
+
+      site_license_name:
+        type: str
+        required: true
+        description:
+          - Name of the license owner.
+
+      site_license_org:
+        type: str
+        required: true
+        description:
+          - Name of the organisation the license is issued to.
+
+      site_hostname:
+        type: str
+        required: false
+        description:
+          - Hostname to use when calling Qlik Sense repository APIs.
+            Value read from Host.cfg if not provided.

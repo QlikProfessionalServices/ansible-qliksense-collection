@@ -1,0 +1,6 @@
+---
+- name: Include fact tasks
+  ansible.builtin.import_tasks: gather_facts.yaml
+
+- name: Include license tasks
+  ansible.builtin.import_tasks: license.yaml

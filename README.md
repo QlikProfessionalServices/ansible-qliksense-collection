@@ -8,3 +8,4 @@ Roles included in this collection:
 
 - [Qlik Sense setup](roles/setup/README.md)
 - [Qlik Sense download](roles/download/README.md)
+- [Qlik Sense site settings](roles/site/README.md)

@@ -1,0 +1,24 @@
+---
+- name: Get Qlik Sense hostname
+  ansible.builtin.slurp:
+    src: C:\ProgramData\Qlik\Sense\Host.cfg
+  register: host_cfg
+  when: site_hostname is undefined
+
+- name: Set hostname fact
+  ansible.builtin.set_fact:
+    site_hostname: "{{ host_cfg.content | b64decode | b64decode }}"
+  when: host_cfg is defined
+
+- name: Login to Sense proxy
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/about?Xrfkey=asdfghjklzxcvbnm"
+    http_agent: Windows
+    use_default_credential: yes
+    headers:
+      X-Qlik-Xrfkey: asdfghjklzxcvbnm
+  register: sense_login
+
+- name: Set session cookie fact
+  ansible.builtin.set_fact:
+    qs_cookie: "{{ sense_login.set_cookie | regex_search('^[\\w-]+=[\\w-]+;') }}"

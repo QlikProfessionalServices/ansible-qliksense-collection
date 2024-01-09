@@ -27,10 +27,13 @@
 
   roles:
     - role: qlik.sense.download
+
     - role: qlik.sense.setup
       root_dir: \\{{ ansible_netbios_name }}\QlikShare
       user_with_domain: '{{ ansible_netbios_name }}\qservice'
       user_password: "{{ qlik_service_password }}"
+
+    - role: qlik.sense.site
 
   tasks:
     - name: Firewall rule to allow HTTPS access to Qlik Sense
