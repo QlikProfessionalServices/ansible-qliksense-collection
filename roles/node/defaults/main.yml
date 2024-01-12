@@ -1,0 +1,7 @@
+---
+node_purpose: Production
+node_failover_candidate: false
+node_engine_enabled: "{{ node_failover_candidate }}"
+node_proxy_enabled: "{{ node_failover_candidate }}"
+node_scheduler_enabled: "{{ node_failover_candidate }}"
+node_printing_enabled: "{{ node_failover_candidate }}"

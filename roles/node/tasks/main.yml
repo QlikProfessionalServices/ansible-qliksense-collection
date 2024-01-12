@@ -1,0 +1,9 @@
+---
+- name: Include fact tasks
+  ansible.builtin.include_tasks:
+    file: gather_facts.yaml
+    apply:
+      delegate_to: "{{ node_central_inventory }}"
+
+- name: Include register tasks
+  ansible.builtin.import_tasks: register.yaml

@@ -1,0 +1,74 @@
+---
+argument_specs:
+  main:
+    short_description: Configure Qlik Sense node
+    options:
+      node_name:
+        type: str
+        required: true
+        description:
+          - Display name for the node
+
+      node_hostname:
+        type: str
+        required: true
+        description:
+          - Hostname of the node for inter-node communications
+
+      node_central_inventory:
+        type: str
+        required: true
+        description:
+          - Inventory hostname of the central node
+
+      node_central_hostname:
+        type: str
+        required: false
+        description:
+          - Hostname to use when calling Qlik Sense repository APIs.
+            Value read from Host.cfg if not provided.
+
+      node_purpose:
+        type: str
+        default: Production
+        choices:
+          - Production
+          - Development
+          - ProductionAndDevelopment
+        description:
+          - The purpose of the node.
+
+      node_failover_candidate:
+        type: bool
+        default: false
+        description:
+          - Indicates whether the node should be a failover candidate for the central role.
+            When this option is set to true all services are activated unless explicitly defined.
+
+      node_engine_enabled:
+        type: bool
+        default: false
+        description:
+          - Indicates whether the engine service should be activated.
+            Defaults to false unless the node is a failover candidate.
+
+      node_proxy_enabled:
+        type: bool
+        default: false
+        description:
+          - Indicates whether the proxy service should be activated.
+            Defaults to false unless the node is a failover candidate.
+
+      node_scheduler_enabled:
+        type: bool
+        default: false
+        description:
+          - Indicates whether the scheduler service should be activated.
+            Defaults to false unless the node is a failover candidate.
+
+      node_printing_enabled:
+        type: bool
+        default: false
+        description:
+          - Indicates whether the printing service should be activated.
+            Defaults to false unless the node is a failover candidate.

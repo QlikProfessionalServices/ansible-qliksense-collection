@@ -1,0 +1,62 @@
+---
+- name: Central node tasks
+  delegate_to: "{{ node_central_inventory }}"
+  block:
+    - name: Get node
+      vars:
+        filter: hostName eq '{{ node_hostname }}'
+      ansible.windows.win_uri:
+        url: "https://{{ node_central_hostname }}/qrs/serverNodeConfiguration?filter={{ filter }}&Xrfkey=asdfghjklzxcvbnm"
+        headers:
+          X-Qlik-Xrfkey: asdfghjklzxcvbnm
+          Cookie: "{{ qs_cookie }}"
+        return_content: yes
+      register: node
+
+    - name: Create node
+      ansible.windows.win_uri:
+        url: "https://{{ node_central_hostname }}/qrs/serverNodeConfiguration/container?Xrfkey=asdfghjklzxcvbnm"
+        method: POST
+        content_type: application/json
+        headers:
+          X-Qlik-Xrfkey: asdfghjklzxcvbnm
+          Cookie: "{{ qs_cookie }}"
+        body:
+          configuration:
+            name: "{{ node_name }}"
+            hostName: "{{ node_hostname }}"
+            nodePurpose: "{{ node_purpose }}"
+            failoverCandidate: "{{ node_failover_candidate }}"
+            engineEnabled: "{{ node_engine_enabled }}"
+            proxyEnabled: "{{ node_proxy_enabled }}"
+            schedulerEnabled: "{{ node_scheduler_enabled }}"
+            printingEnabled: "{{ node_printing_enabled }}"
+        status_code: 201
+        return_content: yes
+      changed_when: true
+      register: new_node
+      when: node.json is undefined or node.json | length == 0
+
+    - name: Distribute certificates to node
+      vars:
+        node_config_id: "{{ new_node.json.configuration.id | default('') }}"
+      ansible.windows.win_uri:
+        url: "https://{{ node_central_hostname }}/qrs/serverNodeRegistration/start/{{ node_config_id }}?Xrfkey=asdfghjklzxcvbnm"
+        url_timeout: 120
+        headers:
+          X-Qlik-Xrfkey: asdfghjklzxcvbnm
+          Cookie: "{{ qs_cookie }}"
+        return_content: yes
+      changed_when: true
+      register: password
+      when: new_node is not skipped
+
+- name: Unlock certificates
+  ansible.windows.win_uri:
+    url: "http://localhost:4570/certificateSetup"
+    method: POST
+    content_type: application/x-www-form-urlencoded
+    body: "__pwd={{ password.content[1:-1] }}"
+  changed_when: true
+  register: new_node
+  when: password is not skipped
