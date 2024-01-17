@@ -1,4 +1,4 @@
 ---
 download_path: "{{ lookup('ansible.builtin.env', 'HOME') }}/Downloads"
 setup_path: "{{ download_path }}/{{ release_name }}/Qlik_Sense_setup.exe"
-patch_path: "{{ download_path }}/{{ patch_name }}/Qlik_Sense_update.exe"
+patch_path: "{{ download_path }}/{{ patch_name | default(omit) }}/Qlik_Sense_update.exe"

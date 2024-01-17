@@ -31,7 +31,7 @@ argument_specs:
 
       update_path:
         type: path
-        default: "{{ download_path }}/{{ patch_name }}/Qlik_Sense_update.exe"
+        default: "{{ download_path }}/{{ patch_name | default(omit) }}/Qlik_Sense_update.exe"
         description:
           - Path of the Qlik Sense update file.
 

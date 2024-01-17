@@ -43,7 +43,7 @@
       | flatten }}"
   ansible.builtin.set_fact:
     release_name: "Qlik Sense {{ release.name | split(' ') | slice(2) | first | join(' ') }}"
-    patch_name: "{% if patch_name is defined %}Qlik Sense {{ patch_name }}{% endif %}"
+    patch_name: "{% if patch_name is defined %}Qlik Sense {{ patch_name | default('') }}{% endif %}"
     download_url: "{{ release.assets
       | selectattr('name', 'equalto', 'Qlik_Sense_setup.exe')
       | map(attribute='browser_download_url')
