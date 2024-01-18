@@ -18,14 +18,17 @@
     - QlikSensePrintingService
   when: not skip_start_services
 
-- name: Wait for Qlik Sense services to start
+- name: Wait for Qlik Sense services to be ready
   ansible.windows.win_uri:
-    url: "https://{{ ansible_facts.hostname }}/qps/user"
+    url: "http://{{ ansible_facts.hostname }}:4444/status/servicestate?xrfkey=asdfghjklzxcvbnm"
     follow_redirects: none
     method: GET
-    validate_certs: no
+    headers:
+      X-Qlik-Xrfkey: asdfghjklzxcvbnm
+      X-Qlik-User: UserDirectory=INTERNAL;UserId=sa_api
+    return_content: yes
   register: _result
-  until: _result.status_code == 200
+  until: _result.status_code == 200 and _result.json.value > 0
   retries: 30
   delay: 10
   when: not skip_start_services

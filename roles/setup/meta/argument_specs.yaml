@@ -125,20 +125,18 @@ argument_specs:
 
       apps_dir:
         type: path
-        required: false
-        description: Directory to store apps in. Defaults to '{{ root_dir }}\Apps'.
+        default: '{{ root_dir | default(omit) }}\Apps'
+        description: Directory to store apps in.
 
       static_content_root_dir:
         type: path
-        required: false
+        default: '{{ root_dir | default(omit) }}\StaticContent'
         description: Root directory for all static content of the site.
-                     Defaults to '{{ root_dir }}\StaticContent'.
 
       archived_logs_dir:
         type: path
-        required: false
+        default: '{{ root_dir | default(omit) }}\ArchivedLogs'
         description: Directory to save archived log files in.
-                     Defaults to '{{ root_dir }}\ArchivedLogs'.
 
       create_cluster:
         type: bool

@@ -18,6 +18,9 @@
     headers:
       X-Qlik-Xrfkey: asdfghjklzxcvbnm
   register: sense_login
+  until: sense_login.status_code == 200
+  retries: 30
+  delay: 10
 
 - name: Set session cookie fact
   ansible.builtin.set_fact:

@@ -4,7 +4,7 @@
   <DbUserPassword>{{ db_user_password | regex_replace('&', '&amp;') }}</DbUserPassword>
   <DbHost>{{ db_host }}</DbHost>
   <DbPort>{{ db_port }}</DbPort>
-  <RootDir>{{ root_dir }}</RootDir>
+  <RootDir>{{ root_dir | default('') }}</RootDir>
   <StaticContentRootDir>{{ static_content_root_dir }}</StaticContentRootDir>
   <ArchivedLogsDir>{{ archived_logs_dir }}</ArchivedLogsDir>
   <AppsDir>{{ apps_dir }}</AppsDir>
