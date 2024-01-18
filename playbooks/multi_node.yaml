@@ -1,0 +1,113 @@
+- name: Prepare nodes
+  hosts: sense_nodes
+
+  roles:
+    - role: qlik.sense.download
+
+  tasks:
+    - name: Create Qlik Sense service account
+      ansible.windows.win_user:
+        name: qservice
+        password: "{{ qlik_service_password }}"
+        password_never_expires: yes
+        user_cannot_change_password: yes
+        groups:
+          - Administrators
+        groups_action: add
+
+- name: Deploy central node
+  hosts: central_nodes
+
+  pre_tasks:
+    - name: Create cluster root directory
+      ansible.windows.win_file:
+        path: C:\QlikShare
+        state: directory
+      when: "'central_nodes' in group_names"
+
+    - name: Create cluster share
+      ansible.windows.win_share:
+        name: QlikShare
+        description: Qlik Sense cluster share
+        path: C:\QlikShare
+        list: no
+        full: Administrators,qservice
+      when: "'central_nodes' in group_names"
+
+  roles:
+    - role: qlik.sense.setup
+      root_dir: \\{{ ansible_netbios_name }}\QlikShare
+      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      user_password: "{{ qlik_service_password }}"
+      db_host: "{{ ansible_host }}"
+      configure_db_listener: yes
+      listen_addresses: "*"
+      ip_range: ["0.0.0.0/0"]
+
+    - role: qlik.sense.site
+
+  tasks:
+    - name: Firewall rule to allow QRD access from rim nodes
+      community.windows.win_firewall_rule:
+        name: Qlik Sense Repository Database
+        group: Qlik Sense
+        localport: 4432
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+
+- name: Deploy rim nodes
+  hosts: rim_nodes
+
+  pre_tasks:
+    - name: Firewall rule to allow status checks
+      community.windows.win_firewall_rule:
+        name: Qlik Sense QRS Status Check
+        group: Qlik Sense
+        localport: 4444
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+
+    - name: Firewall rule to allow QRS communication
+      community.windows.win_firewall_rule:
+        name: Qlik Sense QRS
+        group: Qlik Sense
+        localport: 4242
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
+
+  roles:
+    - role: qlik.sense.setup
+      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      user_password: "{{ qlik_service_password }}"
+      create_cluster: no
+      db_host: "{{ groups['central_nodes'] | map('extract', hostvars, ['ansible_host']) | first }}"
+      install_local_db: no
+
+    - role: qlik.sense.node
+      node_name: "{{ inventory_hostname }}"
+      node_hostname: "{{ inventory_hostname }}"
+      node_central_inventory: "{{ groups['central_nodes'] | first }}"
+
+- name: Configure nodes
+  hosts: sense_nodes
+
+  tasks:
+    - name: Firewall rule to allow HTTPS access to Qlik Sense
+      community.windows.win_firewall_rule:
+        name: Qlik Sense Proxy (HTTPS-In)
+        group: Qlik Sense
+        localport: 443
+        action: allow
+        direction: in
+        protocol: tcp
+        state: present
+        enabled: yes
