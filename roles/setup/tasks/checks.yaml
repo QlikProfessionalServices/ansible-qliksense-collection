@@ -72,6 +72,7 @@
     update_major: "{{ update_version | split('.') | slice(2) | first | join('.') }}"
   ansible.builtin.assert:
     that:
+      - update_version is version('0.0.0', 'gt')
       - update_version is version(installed_patch, 'ge', strict=true)
       - update_major is version(installed_major, 'eq', strict=true)
     fail_msg: Patch version not compatible with installed release.
