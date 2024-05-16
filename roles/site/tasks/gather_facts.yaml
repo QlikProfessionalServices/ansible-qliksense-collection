@@ -8,7 +8,7 @@
 - name: Set hostname fact
   ansible.builtin.set_fact:
     site_hostname: "{{ host_cfg.content | b64decode | b64decode }}"
-  when: host_cfg is defined
+  when: host_cfg.content is defined
 
 - name: Login to Sense proxy
   ansible.windows.win_uri:
