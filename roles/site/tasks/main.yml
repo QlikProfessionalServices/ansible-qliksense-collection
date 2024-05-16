@@ -4,3 +4,8 @@
 
 - name: Include license tasks
   ansible.builtin.import_tasks: license.yaml
+  module_defaults:
+    ansible.windows.win_uri:
+      headers:
+        X-Qlik-Xrfkey: "{{ xrfkey }}"
+        Cookie: "{{ qs_cookie }}"

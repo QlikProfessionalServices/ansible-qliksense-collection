@@ -10,13 +10,17 @@
     site_hostname: "{{ host_cfg.content | b64decode | b64decode }}"
   when: host_cfg.content is defined
 
+- name: Set xrfkey fact
+  ansible.builtin.set_fact:
+    xrfkey: "{{ lookup('password', '/dev/null', chars=['ascii_lowercase'], length=16) }}"
+
 - name: Login to Sense proxy
   ansible.windows.win_uri:
-    url: "https://{{ site_hostname }}/qrs/about?Xrfkey=asdfghjklzxcvbnm"
+    url: "https://{{ site_hostname }}/qrs/about?Xrfkey={{ xrfkey }}"
     http_agent: Windows
     use_default_credential: yes
     headers:
-      X-Qlik-Xrfkey: asdfghjklzxcvbnm
+      X-Qlik-Xrfkey: "{{ xrfkey }}"
   register: sense_login
   until: sense_login.status_code == 200
   retries: 30

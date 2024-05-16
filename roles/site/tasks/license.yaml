@@ -1,21 +1,15 @@
 ---
 - name: Check license
   ansible.windows.win_uri:
-    url: "https://{{ site_hostname }}/qrs/license?Xrfkey=asdfghjklzxcvbnm"
-    headers:
-      X-Qlik-Xrfkey: asdfghjklzxcvbnm
-      Cookie: "{{ qs_cookie }}"
+    url: "https://{{ site_hostname }}/qrs/license?Xrfkey={{ xrfkey }}"
     return_content: yes
   register: sense_license
 
 - name: Activate license
   ansible.windows.win_uri:
-    url: "https://{{ site_hostname }}/qrs/license?Xrfkey=asdfghjklzxcvbnm"
+    url: "https://{{ site_hostname }}/qrs/license?Xrfkey={{ xrfkey }}"
     method: POST
     content_type: application/json
-    headers:
-      X-Qlik-Xrfkey: asdfghjklzxcvbnm
-      Cookie: "{{ qs_cookie }}"
     body:
       key: "{{ site_license_key }}"
       name: "{{ site_license_name }}"
