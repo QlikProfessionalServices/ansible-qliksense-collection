@@ -105,9 +105,19 @@
 - name: Set setup path
   ansible.builtin.set_fact:
     setup_path: '{{ ansible_user_dir }}\Downloads\{{ setup_path | basename }}'
-  when: setup_path is defined
+  when:
+    - setup_path is defined
+    - downloads.results
+        | selectattr('item.dest', 'equalto', setup_path)
+        | selectattr('skipped', 'undefined')
+        | length > 0
 
 - name: Set patch path
   ansible.builtin.set_fact:
-    patch_path: '{{ ansible_user_dir }}\Downloads\{{ patch_path | basename }}'
-  when: patch_path is defined
+    update_path: '{{ ansible_user_dir }}\Downloads\{{ patch_path | basename }}'
+  when:
+    - patch_path is defined
+    - downloads.results
+        | selectattr('item.dest', 'equalto', patch_path)
+        | selectattr('skipped', 'undefined')
+        | length > 0
