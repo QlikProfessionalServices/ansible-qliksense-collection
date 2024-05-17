@@ -16,6 +16,8 @@ site_hostname: sense-cn.domain.tld
 site_license_key: AAAnfwebnfl...
 site_license_name: Your Name
 site_license_org: Your Company
+site_validate_certs: true
+site_install_monitoring_apps: false
 ```
 
 Dependencies
@@ -35,6 +37,7 @@ Including an example of how to use your role (for instance, with variables passe
       site_license_key: "{{ qlik_sense_slk }}"
       site_license_name: Adam Haydon
       site_license_org: Qlik
+      site_install_monitoring_apps: yes
 ```
 
 License
