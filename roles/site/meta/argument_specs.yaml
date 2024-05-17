@@ -34,3 +34,11 @@ argument_specs:
         description:
           - Specifies whether to install all monitoring apps. By default only Operations Monitor and
             License monitor are installed.
+
+      site_validate_certs:
+        type: bool
+        default: true
+        description:
+          - If C(no), SSL certificates will not be validated.
+          - This should only be used on personally controlled sites using self-signed
+            certificates.

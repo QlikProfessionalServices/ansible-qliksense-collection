@@ -5,6 +5,7 @@
 - name: Import tasks
   module_defaults:
     ansible.windows.win_uri:
+      validate_certs: "{{ site_validate_certs }}"
       headers:
         X-Qlik-Xrfkey: "{{ xrfkey }}"
         Cookie: "{{ qs_cookie }}"

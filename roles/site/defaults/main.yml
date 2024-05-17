@@ -1,2 +1,3 @@
 ---
+site_validate_certs: true
 site_install_monitoring_apps: false
