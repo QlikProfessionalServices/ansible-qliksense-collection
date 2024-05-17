@@ -34,6 +34,7 @@
       user_password: "{{ qlik_service_password }}"
 
     - role: qlik.sense.site
+      site_install_monitoring_apps: yes
 
   tasks:
     - name: Firewall rule to allow HTTPS access to Qlik Sense

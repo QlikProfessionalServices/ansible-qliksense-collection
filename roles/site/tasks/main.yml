@@ -2,10 +2,19 @@
 - name: Include fact tasks
   ansible.builtin.import_tasks: gather_facts.yaml
 
-- name: Include license tasks
-  ansible.builtin.import_tasks: license.yaml
+- name: Import tasks
   module_defaults:
     ansible.windows.win_uri:
       headers:
         X-Qlik-Xrfkey: "{{ xrfkey }}"
         Cookie: "{{ qs_cookie }}"
+  block:
+    - name: Include license tasks
+      ansible.builtin.include_tasks: license.yaml
+      when:
+        - site_license_key is defined
+        - site_license_name is defined
+        - site_license_org is defined
+    - name: Include monitoring apps tasks
+      ansible.builtin.include_tasks: monitoring_apps.yaml
+      when: site_install_monitoring_apps

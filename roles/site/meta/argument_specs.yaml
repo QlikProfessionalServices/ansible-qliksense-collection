@@ -27,3 +27,10 @@ argument_specs:
         description:
           - Hostname to use when calling Qlik Sense repository APIs.
             Value read from Host.cfg if not provided.
+
+      site_install_monitoring_apps:
+        type: bool
+        default: false
+        description:
+          - Specifies whether to install all monitoring apps. By default only Operations Monitor and
+            License monitor are installed.

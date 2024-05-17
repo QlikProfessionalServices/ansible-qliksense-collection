@@ -1,0 +1,75 @@
+---
+- name: Get available monitoring apps
+  ansible.windows.win_find:
+    paths: '{{ ansible_env["ProgramFiles"] | default("C:\ProgramData") }}\Qlik\Sense\Repository\DefaultApps'
+    patterns: ["*.qvf"]
+  register: monitor_apps
+
+- name: Check for existing app
+  vars:
+    filter: name eq '{{ item | win_basename | splitext | first }}'
+    query: filter={{ filter | urlencode }}&xrfkey={{ xrfkey }}
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/app?{{ query }}"
+    return_content: yes
+  loop: "{{ monitor_apps.files | map(attribute='path') | list }}"
+  register: existing_apps
+
+- name: Get app import folder path
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/app/importfolder?xrfkey={{ xrfkey }}"
+    return_content: yes
+  register: import_folder
+
+- name: Get Monitoring Apps stream
+  vars:
+    filter: name eq 'Monitoring Apps'
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/stream?filter={{ filter | urlencode }}&xrfkey={{ xrfkey }}"
+    return_content: yes
+  register: monitoring_apps_stream
+
+- name: Set app and import facts
+  ansible.builtin.set_fact:
+    import_path: "{{ import_folder.content | from_json }}"
+    stream: "{{ monitoring_apps_stream.json.0.id }}"
+    missing_apps: "{{ existing_apps.results
+      | rejectattr('json', 'defined')
+      | map(attribute='item')
+      | list }}"
+
+- name: Create import folder path
+  ansible.windows.win_file:
+    path: '{{ import_path }}'
+    state: directory
+
+- name: Copy apps to import folder
+  ansible.windows.win_copy:
+    dest: '{{ import_path }}\{{ item | win_basename }}'
+    src: "{{ item }}"
+    remote_src: yes
+  loop: "{{ missing_apps }}"
+
+- name: Import apps
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/app/import?name={{ basename }}&xrfkey={{ xrfkey }}"
+    url_method: POST
+    content_type: application/json
+    return_content: yes
+    body: "{{ item | win_basename | quote }}"
+    status_code: 201
+  vars:
+    basename: "{{ item | win_basename | splitext | first }}"
+  loop: "{{ missing_apps }}"
+  changed_when: new_apps.status_code == 201
+  register: new_apps
+
+- name: Publish to Monitoring Apps stream
+  ansible.windows.win_uri:
+    url: "https://{{ site_hostname }}/qrs/app/{{ item }}/publish?stream={{ stream }}&xrfkey={{ xrfkey }}"
+    url_method: PUT
+    content_type: application/json
+    body: ""
+  loop: "{{ new_apps.results | map(attribute='json.id') | list }}"
+  changed_when: new_apps.status_code == 200
+  register: new_apps
