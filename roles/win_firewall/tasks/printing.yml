@@ -1,0 +1,11 @@
+---
+- name: Create Qlik Sense printing firewall rules
+  community.windows.win_firewall_rule:
+    name: Qlik Sense Printing Service
+    localport: 4899
+    group: Qlik Sense
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: yes

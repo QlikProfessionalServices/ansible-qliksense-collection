@@ -1,0 +1,20 @@
+---
+- name: Create Qlik Sense engine firewall rules
+  community.windows.win_firewall_rule:
+    name: "{{ item.name }}"
+    localport: "{{ item.port }}"
+    group: Qlik Sense
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: yes
+  loop:
+    - name: Qlik Sense Engine Service
+      port: 4747
+    - name: Qlik Sense Hub Service
+      port: 9028
+    - name: Qlik Sense Broker Service
+      port: 4900
+  loop_control:
+    label: "{{ item.name }}"

@@ -1,0 +1,40 @@
+---
+- name: Create main firewall rules for Qlik Sense
+  community.windows.win_firewall_rule:
+    name: "{{ item.name }}"
+    group: Qlik Sense
+    localport: "{{ item.port }}"
+    action: allow
+    direction: in
+    protocol: tcp
+    state: present
+    enabled: yes
+  loop:
+    - name: Qlik Sense Repository Service (REST)
+      port: 4242
+    - name: Qlik Sense Repository Service (WS)
+      port: 4239
+    - name: Qlik Sense Data Profiling Service
+      port: 4949
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Include central tasks
+  ansible.builtin.import_tasks:
+    file: central.yml
+
+- name: Include proxy tasks
+  ansible.builtin.import_tasks:
+    file: proxy.yml
+
+- name: Include scheduler tasks
+  ansible.builtin.import_tasks:
+    file: scheduler.yml
+
+- name: Include engine tasks
+  ansible.builtin.import_tasks:
+    file: engine.yml
+
+- name: Include printing tasks
+  ansible.builtin.import_tasks:
+    file: printing.yml
