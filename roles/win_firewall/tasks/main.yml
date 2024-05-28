@@ -23,6 +23,10 @@
   ansible.builtin.import_tasks:
     file: central.yml
 
+- name: Include rim node tasks
+  ansible.builtin.import_tasks:
+    file: rim_node.yml
+
 - name: Include proxy tasks
   ansible.builtin.import_tasks:
     file: proxy.yml
