@@ -1,0 +1,14 @@
+---
+argument_specs:
+  main:
+    short_description: Deploy the application management console
+    options:
+      amc_library_name:
+        type: str
+        default: AMC
+        description: Name of the content library to use for the AMC.
+
+      amc_base_uri:
+        type: str
+        default: https://{{ ansible_facts.hostname }}
+        description: Base URL for Qlik Sense API calls.

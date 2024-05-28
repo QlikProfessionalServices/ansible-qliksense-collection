@@ -1,0 +1,58 @@
+---
+- name: Check for AMC content library
+  vars:
+    filter: name eq '{{ amc_library_name }}'
+    xrfkey: asdfghjklzxcvbnm
+    query: filter={{ filter | urlencode }}&xrfkey={{ xrfkey }}
+  ansible.windows.win_uri:
+    url: "{{ amc_base_uri }}/qrs/contentlibrary?{{ query }}"
+    headers:
+      X-Qlik-Xrfkey: "{{ xrfkey }}"
+    use_default_credential: yes
+    http_agent: Windows
+    return_content: yes
+  register: amc_content_library
+
+- name: Create AMC content library
+  vars:
+    xrfkey: asdfghjklzxcvbnm
+    query: xrfkey={{ xrfkey }}
+  ansible.windows.win_uri:
+    url: "{{ amc_base_uri }}/qrs/contentlibrary?{{ query }}"
+    url_method: post
+    headers:
+      X-Qlik-Xrfkey: "{{ xrfkey }}"
+      Cookie: "{{ amc_content_library.set_cookie | regex_findall('^(.+?);', '\\1') }}"
+    content_type: application/json
+    body:
+      name: "{{ amc_library_name }}"
+    status_code: 201
+  when: amc_content_library.json | length == 0
+  register: new_content_library
+
+- name: Get file list for AMC
+  ansible.windows.win_find:
+    paths: C:\Program Files\Qlik\Sense\Tools\AppManagementConsole\amc
+  register: amc_files
+
+- name: Get file content
+  ansible.windows.slurp:
+    src: "{{ item.path }}"
+  loop: "{{ amc_files.files }}"
+  register: file_content
+
+- name: Upload file
+  vars:
+    external_path: "{{ item.item.filename | urlencode }}"
+    xrfkey: asdfghjklzxcvbnm
+    query: externalPath={{ external_path }}&xrfkey={{ xrfkey }}
+  ansible.windows.win_uri:
+    url: "{{ amc_base_uri }}/qrs/contentlibrary/{{ amc_library_name }}/uploadfile?{{ query }}"
+    url_method: post
+    headers:
+      X-Qlik-Xrfkey: "{{ xrfkey }}"
+      Cookie: "{{ amc_content_library.set_cookie | regex_findall('^(.+?);', '\\1') }}"
+    content_type: text/plain
+    body: "{{ item.content | b64decode }}"
+    status_code: 201
+  loop: "{{ file_content.results }}"

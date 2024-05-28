@@ -1,0 +1,3 @@
+---
+amc_library_name: AMC
+amc_base_uri: https://{{ ansible_facts.hostname }}
