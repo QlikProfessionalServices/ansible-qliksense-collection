@@ -3,6 +3,7 @@
 
   roles:
     - role: qlik.sense.download
+    - role: qlik.sense.win_firewall
 
   tasks:
     - name: Create Qlik Sense service account
@@ -46,43 +47,9 @@
 
     - role: qlik.sense.site
 
-  tasks:
-    - name: Firewall rule to allow QRD access from rim nodes
-      community.windows.win_firewall_rule:
-        name: Qlik Sense Repository Database
-        group: Qlik Sense
-        localport: 4432
-        action: allow
-        direction: in
-        protocol: tcp
-        state: present
-        enabled: yes
 
 - name: Deploy rim nodes
   hosts: rim_nodes
-
-  pre_tasks:
-    - name: Firewall rule to allow status checks
-      community.windows.win_firewall_rule:
-        name: Qlik Sense QRS Status Check
-        group: Qlik Sense
-        localport: 4444
-        action: allow
-        direction: in
-        protocol: tcp
-        state: present
-        enabled: yes
-
-    - name: Firewall rule to allow QRS communication
-      community.windows.win_firewall_rule:
-        name: Qlik Sense QRS
-        group: Qlik Sense
-        localport: 4242
-        action: allow
-        direction: in
-        protocol: tcp
-        state: present
-        enabled: yes
 
   roles:
     - role: qlik.sense.setup
@@ -96,18 +63,3 @@
       node_name: "{{ inventory_hostname }}"
       node_hostname: "{{ inventory_hostname }}"
       node_central_inventory: "{{ groups['central_nodes'] | first }}"
-
-- name: Configure nodes
-  hosts: sense_nodes
-
-  tasks:
-    - name: Firewall rule to allow HTTPS access to Qlik Sense
-      community.windows.win_firewall_rule:
-        name: Qlik Sense Proxy (HTTPS-In)
-        group: Qlik Sense
-        localport: 443
-        action: allow
-        direction: in
-        protocol: tcp
-        state: present
-        enabled: yes

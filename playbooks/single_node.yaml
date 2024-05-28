@@ -36,14 +36,4 @@
     - role: qlik.sense.site
       site_install_monitoring_apps: yes
 
-  tasks:
-    - name: Firewall rule to allow HTTPS access to Qlik Sense
-      community.windows.win_firewall_rule:
-        name: Qlik Sense Proxy (HTTPS-In)
-        group: Qlik Sense
-        localport: 443
-        action: allow
-        direction: in
-        protocol: tcp
-        state: present
-        enabled: yes
+    - role: qlik.sense.win_firewall
