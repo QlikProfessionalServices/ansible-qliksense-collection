@@ -25,3 +25,6 @@ http_port_number: 80
 https_port_number: 443
 enable_http_port: false
 db_maximum_connection_pool_size: 90
+bundle_install:
+  - dashboard
+  - visualization
