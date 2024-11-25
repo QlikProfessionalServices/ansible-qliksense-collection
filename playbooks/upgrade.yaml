@@ -1,0 +1,45 @@
+- name: Stop services on rim nodes
+  hosts: rim_nodes
+
+  tasks:
+    - name: Stop Qlik Sense services
+      ansible.windows.win_service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - QlikSenseProxyService
+        - QlikSenseEngineService
+        - QlikSenseSchedulerService
+        - QlikSensePrintingService
+        - QlikSenseRepositoryService
+        - QlikSenseServiceDispatcher
+
+
+- name: Upgrade central node
+  hosts: central_node
+
+  roles:
+    - role: qlik.sense.download
+
+  tasks:
+    - name: Import upgrade tasks from setup role
+      ansible.builtin.import_role:
+        name: qlik.sense.setup
+        tasks_from: upgrade
+      vars:
+        user_password: "{{ qlik_service_password }}"
+
+
+- name: Upgrade rim nodes
+  hosts: rim_nodes
+
+  roles:
+    - role: qlik.sense.download
+
+  tasks:
+    - name: Import upgrade tasks from setup role
+      ansible.builtin.import_role:
+        name: qlik.sense.setup
+        tasks_from: upgrade
+      vars:
+        user_password: "{{ qlik_service_password }}"
