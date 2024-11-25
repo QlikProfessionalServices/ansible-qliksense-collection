@@ -55,7 +55,7 @@
       - "'>' not in db_password"
       - "'<' not in db_password"
       - "',' not in db_password"
-    fail_msg: "The password you entered contains a forbidden character \"';:/.>,"
+    fail_msg: "The password you entered contains a forbidden character \"';:/\\.><,"
   when: db_password is defined
 
 - name: Check Sense version can be installed
