@@ -17,7 +17,7 @@
         groups_action: add
 
 - name: Deploy central node
-  hosts: central_nodes
+  hosts: central_node
 
   pre_tasks:
     - name: Create cluster root directory
