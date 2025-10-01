@@ -19,7 +19,7 @@
   vars:
     latest_result: "{{ sense_releases_pages | default(sense_releases) }}"
     page_count: "{{ latest_result.link | regex_search('page=(\\d+)>; rel=\"last\"', '\\1') | first | int }}"
-  loop: "{{ range(2, page_count | int) }}"
+  loop: "{{ range(2, page_count | int) | list }}"
   when: latest_result is not skipped and latest_result.json
     | selectattr('prerelease', 'equalto', false)
     | selectattr('name', 'equalto', release_name)
