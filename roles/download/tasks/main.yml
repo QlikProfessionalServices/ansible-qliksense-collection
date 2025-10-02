@@ -5,7 +5,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/qlik-download/qlik-sense-server/releases?page=1
     headers:
-      Authorization: "{% if github_token is defined %} Bearer {{ github_token | default('') }} {% endif %}"
+      Authorization: "{{ 'Bearer ' + github_token if github_token is defined else omit }}"
   register: sense_releases
 
 - name: Page through releases # noqa: run-once[task]
@@ -14,7 +14,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/qlik-download/qlik-sense-server/releases?page={{ item }}
     headers:
-      Authorization: "{% if github_token is defined %} Bearer {{ github_token | default('') }} {% endif %}"
+      Authorization: "{{ 'Bearer ' + github_token if github_token is defined else omit }}"
   register: sense_releases_pages
   vars:
     latest_result: "{{ sense_releases_pages | default(sense_releases) }}"

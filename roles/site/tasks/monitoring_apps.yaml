@@ -1,16 +1,16 @@
 ---
 - name: Get available monitoring apps
   ansible.windows.win_find:
-    paths: '{{ ansible_env["ProgramFiles"] | default("C:\ProgramData") }}\Qlik\Sense\Repository\DefaultApps'
+    paths: '{{ ansible_env["ProgramData"] | default("C:\ProgramData") }}\Qlik\Sense\Repository\DefaultApps'
     patterns: ["*.qvf"]
   register: monitor_apps
 
 - name: Check for existing app
   vars:
     filter: name eq '{{ item | win_basename | splitext | first }}'
-    query: filter={{ filter | urlencode }}&xrfkey={{ xrfkey }}
+    qs: filter={{ filter | urlencode }}&xrfkey={{ xrfkey }}
   ansible.windows.win_uri:
-    url: "https://{{ site_hostname }}/qrs/app?{{ query }}"
+    url: "https://{{ site_hostname }}/qrs/app?{{ qs }}"
     return_content: yes
   loop: "{{ monitor_apps.files | map(attribute='path') | list }}"
   register: existing_apps
