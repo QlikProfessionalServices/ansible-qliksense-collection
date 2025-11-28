@@ -22,7 +22,6 @@
       - dbpassword={{ db_password }}
       - hostname={{ hostname | default('') }}
       - sharedpersistenceconfig={{ shared_persistance_config | ansible.windows.quote }}
-      - senddata={{ send_data | default(0) | int }}
       - skipvalidation={{ skip_validation | default(0) | int }}
       - bundleinstall={{ bundle_install | default([]) | join(',') }}
 

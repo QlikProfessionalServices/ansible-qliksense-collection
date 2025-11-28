@@ -3,7 +3,6 @@ desktop_shortcut: true
 skip_start_services: false
 cleanup: false
 shared_persistance_config: '{{ ansible_env.TEMP }}\spc.cfg'
-send_data: false
 skip_validation: false
 db_user_name: qliksenserepository
 db_host: localhost

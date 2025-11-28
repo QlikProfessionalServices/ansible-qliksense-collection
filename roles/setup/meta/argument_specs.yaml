@@ -70,11 +70,6 @@ argument_specs:
         description: Activates setup of shared persistence as storage method. All settings for
                      shared persistence must be in the configuration file referenced here.
 
-      send_data:
-        type: bool
-        default: false
-        description: Shares system data with Qlik in anonymous form.
-
       skip_validation:
         type: bool
         default: false
