@@ -98,13 +98,13 @@
 
 - name: Copy setup file to host
   ansible.windows.win_copy:
-    dest: '{{ ansible_user_dir }}\Downloads\{{ item | basename }}'
+    dest: '{{ ansible_facts["user_dir"] }}\Downloads\{{ item | basename }}'
     src: "{{ item }}"
   loop: "{{ downloads.results | selectattr('dest', 'defined') | map(attribute='dest') | flatten }}"
 
 - name: Set setup path
   ansible.builtin.set_fact:
-    setup_path: '{{ ansible_user_dir }}\Downloads\{{ setup_path | basename }}'
+    setup_path: '{{ ansible_facts["user_dir"] }}\Downloads\{{ setup_path | basename }}'
   when:
     - setup_path is defined
     - downloads.results
@@ -114,7 +114,7 @@
 
 - name: Set patch path
   ansible.builtin.set_fact:
-    update_path: '{{ ansible_user_dir }}\Downloads\{{ patch_path | basename }}'
+    update_path: '{{ ansible_facts["user_dir"] }}\Downloads\{{ patch_path | basename }}'
   when:
     - patch_path is defined
     - downloads.results

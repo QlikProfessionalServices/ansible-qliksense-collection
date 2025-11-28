@@ -1,7 +1,7 @@
 ---
 - name: Get available monitoring apps
   ansible.windows.win_find:
-    paths: '{{ ansible_env["ProgramData"] | default("C:\ProgramData") }}\Qlik\Sense\Repository\DefaultApps'
+    paths: '{{ ansible_facts["env"]["ProgramData"] | default("C:\ProgramData") }}\Qlik\Sense\Repository\DefaultApps'
     patterns: ["*.qvf"]
   register: monitor_apps
 
