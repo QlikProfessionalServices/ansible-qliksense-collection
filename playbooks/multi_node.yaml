@@ -24,7 +24,7 @@
       ansible.windows.win_file:
         path: C:\QlikShare
         state: directory
-      when: "'central_nodes' in group_names"
+      when: "'central_node' in group_names"
 
     - name: Create cluster share
       ansible.windows.win_share:
@@ -33,17 +33,17 @@
         path: C:\QlikShare
         list: no
         full: Administrators,qservice
-      when: "'central_nodes' in group_names"
+      when: "'central_node' in group_names"
 
   roles:
     - role: qlik.sense.setup
-      root_dir: \\{{ ansible_netbios_name }}\QlikShare
-      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      root_dir: \\{{ ansible_facts["netbios_name"] }}\QlikShare
+      user_with_domain: '{{ ansible_facts["netbios_name"] }}\qservice'
       user_password: "{{ qlik_service_password }}"
       db_host: "{{ ansible_host }}"
       configure_db_listener: yes
       listen_addresses: "*"
-      ip_range: ["0.0.0.0/0"]
+      ip_range: ["0.0.0.0/0", "::/0"]
 
     - role: qlik.sense.site
 
@@ -51,15 +51,18 @@
 - name: Deploy rim nodes
   hosts: rim_nodes
 
+  vars:
+    central_node: "{{ groups['central_node'] | first }}"
+
   roles:
     - role: qlik.sense.setup
-      user_with_domain: '{{ ansible_netbios_name }}\qservice'
+      user_with_domain: '{{ ansible_facts["netbios_name"] }}\qservice'
       user_password: "{{ qlik_service_password }}"
       create_cluster: no
-      db_host: "{{ groups['central_nodes'] | map('extract', hostvars, ['ansible_host']) | first }}"
+      db_host: "{{ hostvars[central_node]['ansible_facts']['hostname'] }}"
       install_local_db: no
 
     - role: qlik.sense.node
       node_name: "{{ inventory_hostname }}"
       node_hostname: "{{ inventory_hostname }}"
-      node_central_inventory: "{{ groups['central_nodes'] | first }}"
+      node_central_inventory: "{{ central_node }}"

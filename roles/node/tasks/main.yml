@@ -4,6 +4,7 @@
     file: gather_facts.yaml
     apply:
       delegate_to: "{{ node_central_inventory }}"
+      run_once: true
 
 - name: Include register tasks
   ansible.builtin.import_tasks: register.yaml

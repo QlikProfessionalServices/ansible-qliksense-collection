@@ -1,6 +1,7 @@
 ---
 - name: Central node tasks
   delegate_to: "{{ node_central_inventory }}"
+  throttle: 1
   block:
     - name: Get node
       vars:
@@ -50,6 +51,7 @@
       changed_when: true
       register: password
       when: new_node is not skipped
+
 
 - name: Unlock certificates
   ansible.windows.win_uri:
